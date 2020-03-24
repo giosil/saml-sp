@@ -1,0 +1,123 @@
+package org.dew.saml.web;
+
+import java.io.*;
+
+import java.util.Enumeration;
+
+import javax.servlet.http.*;
+
+import com.lastpass.saml.AttributeSet;
+import com.lastpass.saml.SAMLClient;
+
+import javax.servlet.*;
+
+public
+class WebSSOPost extends HttpServlet
+{
+  private static final long serialVersionUID = 9145953474733766353L;
+  
+  public
+  void doGet(HttpServletRequest request, HttpServletResponse response)
+      throws ServletException, IOException
+  {
+    doPost(request, response);
+  }
+  
+  public
+  void doPost(HttpServletRequest request, HttpServletResponse response)
+      throws ServletException, IOException
+  {
+    try {
+      String sRelayState     = request.getParameter("RelayState");
+      String sB64SAMLReponse = request.getParameter("SAMLResponse");
+      if(sB64SAMLReponse == null || sB64SAMLReponse.length() == 0) {
+        sendMessage(request, response, "NO SAMLResponse");
+      }
+      else {
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+        
+        AttributeSet attributeSet = SAMLClient.getInstance().validateResponse(sB64SAMLReponse);
+        String loginReqId = attributeSet != null ? attributeSet.getRequestId() : null;
+        String username   = attributeSet != null ? attributeSet.getNameId() : null;
+        
+        out.println("<html>");
+        out.println("<body>");
+        out.println("<b>RelayState:</b> " + sRelayState + "<br>");
+        out.println("<b>SAML Response:</b>");
+        out.println("<br>");
+        out.println(sB64SAMLReponse);
+        
+        out.println("<br>");
+        out.println("<hr>");
+        out.println("<b>SAML Response:</b>");
+        out.println("<br>");
+        out.println(SAMLClient.getInstance().base64Decode(sB64SAMLReponse).replace("<", "&lt;").replace(">", "&gt;"));
+        
+        if(username != null && username.length() > 0) {
+          out.println("<br>");
+          out.println("<hr>");
+          out.println("<b>Result:</b>");
+          out.println("<br>");
+          out.println("<b>User:</b> " + username + " , <b>Request Id:</b>" + loginReqId);
+        }
+        
+        out.println("<br>");
+        out.println("<hr>");
+        out.println("<b>Header:</b>");
+        out.println("<br>");
+        Enumeration<String> enumHeaderNames = request.getHeaderNames();
+        while(enumHeaderNames.hasMoreElements()) {
+          String sName  = enumHeaderNames.nextElement();
+          out.println("<b>" + sName + "</b>: " + request.getHeader(sName) + "<br>");
+        }
+        
+        if(loginReqId != null && loginReqId.length() > 0) {
+          out.println("<br>");
+          out.println("<hr>");
+          out.println("<br>");
+          out.println("<a href=\"" + SAMLClient.getInstance().getRedirectLogoutURL(loginReqId) + "\" target=\"_blank\">Logout</a>");
+        }
+        out.println("</body>");
+        out.println("</html>");
+      }
+    }
+    catch(Exception ex) {
+      sendMessage(request, response, ex);
+    }
+  }
+  
+  protected
+  void sendMessage(HttpServletRequest request, HttpServletResponse response, String sMessage)
+      throws ServletException, IOException
+  {
+    if(sMessage == null) sMessage = "";
+    response.setContentType("text/html");
+    PrintWriter out = response.getWriter();
+    out.println("<html>");
+    out.println("<body>");
+    out.println(sMessage);
+    out.println("</body>");
+    out.println("</html>");
+  }
+  
+  protected
+  void sendMessage(HttpServletRequest request, HttpServletResponse response, Exception ex)
+      throws ServletException, IOException
+  {
+    String sMessage = "Exception";
+    if(ex != null) {
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      PrintStream ps = new PrintStream(baos);
+      ex.printStackTrace(ps);
+      sMessage = new String(baos.toByteArray()).replace("\n", "<br>");
+    }
+    response.setContentType("text/html");
+    PrintWriter out = response.getWriter();
+    out.println("<html>");
+    out.println("<body>");
+    out.println(sMessage);
+    out.println("</body>");
+    out.println("</html>");
+  }
+}

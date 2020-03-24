@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>SAML Service Provider</title>
+</head>
+<body>
+  <h3>SAML Service Provider</h3>
+</body>
+</html>
