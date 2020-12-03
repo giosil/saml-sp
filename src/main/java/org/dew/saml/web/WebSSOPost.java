@@ -94,11 +94,7 @@ class WebSSOPost extends HttpServlet
     if(sMessage == null) sMessage = "";
     response.setContentType("text/html");
     PrintWriter out = response.getWriter();
-    out.println("<html>");
-    out.println("<body>");
-    out.println(sMessage);
-    out.println("</body>");
-    out.println("</html>");
+    out.println("<html><body>" + sMessage.replace("<", "&lt;").replace(">", "&gt;") + "</body></html>");
   }
   
   protected
@@ -108,16 +104,11 @@ class WebSSOPost extends HttpServlet
     String sMessage = "Exception";
     if(ex != null) {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      PrintStream ps = new PrintStream(baos);
-      ex.printStackTrace(ps);
-      sMessage = new String(baos.toByteArray()).replace("\n", "<br>");
+      ex.printStackTrace(new PrintStream(baos));
+      sMessage = new String(baos.toByteArray());
     }
     response.setContentType("text/html");
     PrintWriter out = response.getWriter();
-    out.println("<html>");
-    out.println("<body>");
-    out.println(sMessage);
-    out.println("</body>");
-    out.println("</html>");
+    out.println("<html><body>" + sMessage.replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br>") + "</body></html>");
   }
 }
