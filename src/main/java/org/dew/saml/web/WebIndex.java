@@ -1,12 +1,16 @@
 package org.dew.saml.web;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.io.PrintWriter;
 
-import javax.servlet.http.*;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import com.lastpass.saml.SAMLClient;
-
-import javax.servlet.*;
 
 public
 class WebIndex extends HttpServlet
@@ -25,7 +29,8 @@ class WebIndex extends HttpServlet
       throws ServletException, IOException
   {
     try {
-      response.setHeader("Location", SAMLClient.getInstance().getRedirectURL(request.getRequestURL().toString()));
+      String requestURL = request.getRequestURL().toString();
+      response.setHeader("Location", SAMLClient.getInstance(requestURL).getRedirectURL(requestURL));
       response.sendError(302);
     }
     catch(Exception ex) {
