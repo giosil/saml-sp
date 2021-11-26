@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+
 import java.util.Enumeration;
 
 import javax.servlet.ServletException;
@@ -13,6 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.lastpass.saml.AttributeSet;
 import com.lastpass.saml.SAMLClient;
+import com.lastpass.saml.SAMLUtils;
 
 public
 class WebSSOPost extends HttpServlet
@@ -31,8 +33,14 @@ class WebSSOPost extends HttpServlet
       throws ServletException, IOException
   {
     try {
-      String sRelayState     = request.getParameter("RelayState");
+      String relayState      = request.getParameter("RelayState");
       String sB64SAMLReponse = request.getParameter("SAMLResponse");
+      
+      // CWE-79 Improper Neutralization of Input During Web Page Generation (Cross-site Scripting)
+      // WASC-8 Cross Site Scripting
+      sB64SAMLReponse = SAMLUtils.escapeHtml(sB64SAMLReponse);
+      relayState      = SAMLUtils.escapeHtml(relayState);
+      
       if(sB64SAMLReponse == null || sB64SAMLReponse.length() == 0) {
         sendMessage(request, response, "NO SAMLResponse");
       }
@@ -46,7 +54,7 @@ class WebSSOPost extends HttpServlet
         
         out.println("<html>");
         out.println("<body>");
-        out.println("<b>RelayState:</b> " + sRelayState + "<br>");
+        out.println("<b>RelayState:</b> " + relayState + "<br>");
         out.println("<b>SAML Response:</b>");
         out.println("<br>");
         out.println(sB64SAMLReponse);
